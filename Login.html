@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aroma de Valencia | Sign In</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    function getRoleFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const role = params.get("role");
+      return role === "user" ? "user" : "admin";
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+      const role = getRoleFromQuery();
+      document.getElementById("loginSubline").textContent =
+        role === "admin" ? "Admin Console · Sign In" : "User Console · Sign In";
+      document.getElementById("loginRole").value = role;
+    });
+  </script>
+</head>
+<body class="auth-page-body">
+  <script type="module" src="firebase.js"></script>
+
+  <div class="auth-shell">
+    <img src="assets/aroma_de_valencia.png" alt="Aroma de Valencia Logo" class="brand-logo-lg" />
+
+    <main class="auth-wrapper">
+      <section class="brand-text-only">
+        <div class="brand-sub" id="loginSubline">...</div>
+      </section>
+
+      <div id="loginMsg" class="error-banner"></div>
+
+      <form id="loginForm">
+        <input type="hidden" id="loginRole" value="admin" />
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email</label>
+          <input class="form-input" id="loginEmail" type="email" required placeholder="user@company.com" />
+        </div>
+        <div class="form-group password-field">
+          <label class="form-label" for="loginPassword">Password</label>
+          <input class="form-input" id="loginPassword" type="password" required placeholder="••••••••" />
+        </div>
+        <button class="btn-primary" type="submit">Sign In</button>
+      </form>
+
+      <p class="helper-text">
+        Don’t have an account? <a href="signup.html">Sign Up</a>
+      </p>
+      <p class="legal">This portal is restricted. Activity is monitored.</p>
+    </main>
+  </div>
+
+  <script type="module">
+    import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const auth = window.firebaseAuth;
+    const db   = window.firebaseDB;
+    const msg  = document.getElementById("loginMsg");
+
+    function showError(text) { msg.textContent = text; msg.style.display = "block"; }
+
+    // Auto-redirect if already signed in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await routeByRole(user.uid);
+      }
+    });
+
+    async function routeByRole(uid) {
+      const userRef  = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const role = userSnap.data().role || "user";
+        window.location.href = role === "admin" ? "admin-dashboard.html" : "user-dashboard.html";
+      } else {
+        // If no Firestore user doc, create minimal one using the page's selected role
+        const fallbackRole = document.getElementById("loginRole").value || "user";
+        await setDoc(userRef, { role: fallbackRole, email: auth.currentUser?.email || "" }, { merge: true });
+        window.location.href = fallbackRole === "admin" ? "admin-dashboard.html" : "user-dashboard.html";
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.style.display = "none";
+
+      const email    = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await routeByRole(cred.user.uid);
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

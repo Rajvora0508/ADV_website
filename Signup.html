@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aroma de Valencia | Sign Up</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    function getRoleFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const role = params.get("role");
+      return role === "user" ? "user" : "admin";
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+      const role = getRoleFromQuery();
+      document.getElementById("signupSubline").textContent =
+        role === "admin" ? "Admin Console · Create Account" : "User Console · Create Account";
+      document.getElementById("signupRole").value = role;
+    });
+  </script>
+</head>
+<body class="auth-page-body">
+  <script type="module" src="firebase.js"></script>
+
+  <div class="auth-shell">
+    <img src="assets/aroma_de_valencia.png" alt="Aroma de Valencia Logo" class="brand-logo-lg" />
+    <main class="auth-wrapper">
+      <section class="brand-text-only">
+        <div class="brand-sub" id="signupSubline">...</div>
+      </section>
+
+      <div id="signupMsg" class="error-banner"></div>
+
+      <form id="signupForm">
+        <input type="hidden" id="signupRole" value="admin" />
+        <div class="form-group"><label class="form-label" for="firstName">First Name</label><input class="form-input" id="firstName" required /></div>
+        <div class="form-group"><label class="form-label" for="lastName">Last Name</label><input class="form-input" id="lastName" required /></div>
+        <div class="form-group"><label class="form-label" for="email">Email</label><input class="form-input" id="email" type="email" required /></div>
+        <div class="form-group"><label class="form-label" for="password">Password</label><input class="form-input" id="password" type="password" required /></div>
+        <button class="btn-primary" type="submit">Create Account</button>
+      </form>
+
+      <p class="helper-text">Already have an account? <a href="login.html">Sign In</a></p>
+      <p class="legal">This portal is restricted. Activity is monitored.</p>
+    </main>
+  </div>
+
+  <script type="module">
+    import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const auth = window.firebaseAuth;
+    const db   = window.firebaseDB;
+    const msg  = document.getElementById("signupMsg");
+
+    function showError(t){ msg.textContent=t; msg.style.display="block"; }
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.style.display="none";
+
+      const role      = document.getElementById("signupRole").value || "user";
+      const firstName = document.getElementById("firstName").value.trim();
+      const lastName  = document.getElementById("lastName").value.trim();
+      const email     = document.getElementById("email").value.trim();
+      const password  = document.getElementById("password").value.trim();
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: `${firstName} ${lastName}` });
+
+        // Create Firestore user doc (Schema A fields)
+        await setDoc(doc(db, "users", cred.user.uid), {
+          email, firstName, lastName, role, devices: []   // 'devices' list is optional; used by Schema A
+        }, { merge: true });
+
+        // Go to login
+        window.location.href = "login.html?role=" + encodeURIComponent(role);
+      } catch (err) {
+        showError(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

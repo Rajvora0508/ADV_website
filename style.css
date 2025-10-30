@@ -1,0 +1,133 @@
+/* ===== Base reset ===== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #4b1c1c;
+  background: #fffaf9;
+}
+a { color:#7b2e2e; text-decoration: none; }
+
+/* ===== Branding / shared ===== */
+.brand-logo-lg { width: 200px; display:block; margin: 24px auto 8px; }
+.brand-text-only { text-align:center; margin-bottom: 8px; }
+.brand-sub { font-weight:600; color:#5b2525; }
+
+/* ===== Landing / role selection ===== */
+.portal-header { text-align:center; padding: 16px 16px 0; }
+.portal-subtitle { margin-top: 4px; opacity: 0.8; }
+.portal-footer { text-align:center; padding: 16px; opacity:.7; }
+.portal-body { background:#fffaf9; }
+
+.role-container {
+  display:grid;
+  gap:16px;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.role-card {
+  border-radius: 16px;
+  padding: 20px;
+  background:#f4e7e7;
+  cursor:pointer;
+  transition:.2s;
+  box-shadow:0 6px 14px rgba(123,46,46,.15);
+}
+.role-card:hover { transform: translateY(-3px); box-shadow:0 12px 24px rgba(123,46,46,.25); }
+.role-title { margin: 0 0 6px; }
+.role-desc { margin: 0; opacity:.9; line-height:1.4; }
+
+/* ===== Auth pages (login/signup) ===== */
+.auth-page-body {
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:#fffaf9;
+}
+.auth-shell { width:min(520px, 94vw); }
+.auth-wrapper {
+  background:#f8ecec;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow:0 12px 28px rgba(91,31,31,.2);
+}
+.form-group { margin: 12px 0; }
+.form-label { display:block; margin-bottom:6px; font-weight:600; }
+.form-input {
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #d7b7b7;
+  border-radius:10px;
+  background:#fff;
+  color:#3a1c1a;
+}
+.password-field { position:relative; }
+
+.btn-primary {
+  width:100%;
+  margin-top:10px;
+  background:#7b2e2e;
+  color:#fff;
+  border:0;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.helper-text, .legal { text-align:center; margin: 12px 0 0; opacity:.8; }
+
+/* ===== Dashboard essentials (admin + user) ===== */
+.error-banner {
+  display: none;
+  background: #fbe9e9;
+  color: #7b2e2e;
+  border: 1px solid #e0b3b3;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 0 0 14px 0;
+}
+
+.logout-btn {
+  background:#5b1f1f;
+  color:#fff;
+  border:0;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.grid {
+  display:grid;
+  gap:16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.card {
+  background:#7b2e2e;
+  color:#fff;
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 20px rgba(91,31,31,.25);
+}
+
+.user-card {
+  background:#f9eaea;
+  color:#3a1c1a;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 6px 14px rgba(123,46,46,.15);
+}
+
+.placeholder {
+  color:#8b5a5a;
+  font-style: italic;
+}
+
+/* Optional status pill colors */
+.status-online { font-weight:700; }
+.status-offline { opacity:.85; }

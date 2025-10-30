@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aroma De Valencia | User Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+  /* ===== Keep device tile brown but improve contrast ===== */
+ .card {
+  background: #6b2e2e;       /* brown tile */
+  color: #fffaf9;
+  border-radius: 12px;
+  padding: 10px 12px;        /* compact height */
+  border: 1px solid #532020;
+  max-width: 850px;          /* controls total width */
+  margin-left: 40px;         /* 🔹 left alignment + small space from edge */
+  margin-bottom: 15px;       /* gap between tiles */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+  .card h3, 
+  .card p, 
+  .card b {
+    color: #fffaf9;
+  }
+
+  /* ===== Event list visually distinct but harmonious ===== */
+  .event-list {
+    margin-top: 10px;
+    background: #fff5ee;             /* light cream to contrast brown */
+    color: #3a1c1a;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #f1d2ba;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .event-item {
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border: 1px solid #e0c8aa;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .event-item:hover {
+    background: #faefe5;             /* subtle highlight */
+  }
+
+  /* Event titles and subtitles */
+  .event-title {
+    font-weight: 700;
+    color: #4b1c1c;
+  }
+
+  .event-sub {
+    font-size: 0.85rem;
+    opacity: 0.75;
+  }
+
+  /* Event details */
+  .event-details {
+    display: none;
+    background: #fffdfa;
+    border-radius: 8px;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-left: 4px solid #7b2e2e20;
+  }
+
+  /* Details button — teal for clarity */
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #00796b;              /* teal contrast */
+    color: #fff;
+    font-size: 0.75em;
+    font-weight: 500;
+    margin-left: 8px;
+  }
+
+  .badge:hover {
+    background: #005b4f;
+  }
+</style>
+</head>
+<body>
+  <!-- IMPORTANT: Your firebase.js must set window.firebaseAuth and window.firebaseDB -->
+  <script type="module" src="firebase.js"></script>
+
+  <header style="text-align:center; padding:20px;">
+    <img src="assets/aroma_de_valencia.png" class="brand-logo-lg" alt="Logo">
+    <h2>User Dashboard</h2>
+    <p>Track and control your assigned Aroma Diffusers</p>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </header>
+
+  <main style="padding:0 20px 30px;">
+    <div id="userErr" class="error-banner" style="display:none;"></div>
+    <div class="grid" id="deviceGrid"></div>
+  </main>
+
+  <script type="module">
+    // --- Defensive guard in case firebase.js didn't load ---
+    if (!window.firebaseAuth || !window.firebaseDB) {
+      const banner = document.getElementById("userErr");
+      banner.textContent = "Firebase SDK not initialized. Check firebase.js import path.";
+      banner.style.display = "block";
+      throw new Error("firebase.js not loaded / window.firebaseAuth undefined");
+    }
+
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import {
+      doc, getDoc, collection, getDocs, limit, query
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const auth = window.firebaseAuth;
+    const db   = window.firebaseDB;
+
+    const grid = document.getElementById("deviceGrid");
+    const err  = document.getElementById("userErr");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function showError(t){ err.textContent=t; err.style.display="block"; }
+    function placeholder(text){ grid.innerHTML = `<div class="placeholder">${text}</div>`; }
+
+    function fmt(val){
+      if (val == null) return "-";
+      if (Array.isArray(val)) return `[${val.join(", ")}]`;
+      if (val && typeof val === "object" && typeof val.toDate === "function") {
+        try { return val.toDate().toLocaleString(); } catch { return String(val); }
+      }
+      if (typeof val === "object") return JSON.stringify(val, (_, v) => (v && typeof v.toDate === "function" ? v.toDate() : v), 2);
+      return String(val);
+    }
+
+    function detailsKV(data){
+      const rows = [];
+      for (const [k,v] of Object.entries(data)) {
+        if (k === "id") continue;
+        rows.push(`<div class="k">${k}</div><div class="v">${fmt(v)}</div>`);
+      }
+      if (!rows.length) return `<div class="muted">No extra fields.</div>`;
+      return `<div class="kv">${rows.join("")}</div>`;
+    }
+
+    function deviceCard(id, d, eventsHtml){
+      return `<div class="card">
+        <h3 style="margin-top:0">${d.name || "Device " + id}</h3>
+        <p><b>ID:</b> ${id}</p>
+        <p><b>Location:</b> ${d.location || "-"}</p>
+        <p><b>Fragrance:</b> ${d.fragrance || "-"}</p>
+        <p><b>Oil Level:</b> ${d.oilLevel ?? 0}%</p>
+        <p><b>Status:</b> <span class="${d.status === "online" ? "status-online" : "status-offline"}">${d.status || "unknown"}</span></p>
+        ${eventsHtml}
+      </div>`;
+    }
+
+    function eventListHtml(deviceId, events) {
+      if (!Array.isArray(events) || !events.length) {
+        return `<div class="event-list"><div class="event-item muted" style="cursor:default">No events found.</div></div>`;
+      }
+      const items = events.map(ev => {
+        const title = (ev.type || ev.eventType || "event");
+        const sub   = (ev.timestamp && typeof ev.timestamp.toDate === "function")
+          ? ev.timestamp.toDate().toLocaleString()
+          : (ev.name || ev.id);
+        const body  = detailsKV(ev);
+        const eid   = `${deviceId}__${ev.id}`.replace(/[^a-zA-Z0-9_-]/g,"_");
+        return `
+          <div class="event-item" data-eid="${eid}">
+            <div class="event-title">${title}<span class="badge">details</span></div>
+            <div class="event-sub">${sub || ""}</div>
+            <div class="event-details" id="det_${eid}">
+              ${body}
+            </div>
+          </div>`;
+      }).join("");
+      return `<div class="event-list" data-device="${deviceId}">${items}</div>`;
+    }
+
+    function wireEventToggles(container){
+      if (!container) return;
+      container.addEventListener("click", (e)=>{
+        const item = e.target.closest(".event-item");
+        if (!item) return;
+        const det = item.querySelector(".event-details");
+        det.style.display = det.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    // Reads events from either users/{uid}/devices/{id}/events OR devices/{id}/events
+    async function fetchEventsForDevice(uid, deviceId) {
+      // Try user-owned events
+      try {
+        const q1 = query(collection(db, "users", uid, "devices", deviceId, "events"), limit(50));
+        const s1 = await getDocs(q1);
+        if (!s1.empty) return s1.docs.map(x => ({ id: x.id, ...x.data() }));
+      } catch (e) { /* ignore; path may not exist */ }
+
+      // Fallback to top-level device events
+      try {
+        const q2 = query(collection(db, "devices", deviceId, "events"), limit(50));
+        const s2 = await getDocs(q2);
+        return s2.docs.map(x => ({ id: x.id, ...x.data() }));
+      } catch (e) {
+        console.error("Events read failed:", e);
+        return [];
+      }
+    }
+
+    async function renderForUser(user){
+      try {
+        const uRef = doc(db, "users", user.uid);
+        const uSnap = await getDoc(uRef);
+        if (!uSnap.exists()) { placeholder("No user profile found in Firestore."); return; }
+
+        grid.innerHTML = "";
+
+        // Schema A: user doc keeps 'devices' array -> points to top-level devices/{id}
+        const ids = Array.isArray(uSnap.data().devices) ? uSnap.data().devices : [];
+        if (ids.length) {
+          for (const id of ids) {
+            const dSnap = await getDoc(doc(db, "devices", id));
+            if (!dSnap.exists()) continue;
+            const events = await fetchEventsForDevice(user.uid, id);
+            const html = deviceCard(dSnap.id, dSnap.data(), eventListHtml(dSnap.id, events));
+            grid.insertAdjacentHTML("beforeend", html);
+            wireEventToggles(grid.lastElementChild.querySelector(".event-list"));
+          }
+          return;
+        }
+
+        // Schema B: devices under users/{uid}/devices
+        const sub = await getDocs(collection(db, "users", user.uid, "devices"));
+        if (sub.empty) {
+          placeholder("No devices assigned to your account.");
+        } else {
+          for (const d of sub.docs) {
+            const events = await fetchEventsForDevice(user.uid, d.id);
+            const html = deviceCard(d.id, d.data(), eventListHtml(d.id, events));
+            grid.insertAdjacentHTML("beforeend", html);
+            wireEventToggles(grid.lastElementChild.querySelector(".event-list"));
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        showError("Couldn't load your devices: " + e.message);
+      }
+    }
+
+    // Auth flow (single listener to avoid duplicate calls)
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html?role=user";
+        return;
+      }
+      // Debug strip (safe even if appended twice)
+      const dbg = document.createElement("div");
+      dbg.style.cssText = "text-align:center; opacity:.65; margin:8px 0;";
+      dbg.innerHTML = `Debug: <code>${user.email}</code> / UID <code>${user.uid}</code>`;
+      document.querySelector("header").appendChild(dbg);
+
+      renderForUser(user);
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } finally {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

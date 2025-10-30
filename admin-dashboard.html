@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aroma De Valencia | Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <script type="module" src="firebase.js"></script>
+
+  <header style="text-align:center; padding:20px;">
+    <img src="assets/aroma_de_valencia.png" class="brand-logo-lg" alt="Logo">
+    <h2>Admin Dashboard</h2>
+    <p>Monitor and manage all connected Aroma Diffusers</p>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </header>
+
+  <main style="padding: 0 20px 30px;">
+    <section class="section" id="devicesSection">
+      <h3 style="color:#5b2525;">All Devices</h3>
+      <div id="devicesError" class="error-banner"></div>
+      <div class="grid" id="deviceGrid"></div>
+    </section>
+
+    <section class="section" id="usersSection" style="margin-top:28px;">
+      <h3 style="color:#5b2525;">Registered Users</h3>
+      <div id="usersError" class="error-banner"></div>
+      <div class="grid" id="usersGrid"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const auth = window.firebaseAuth;
+    const db   = window.firebaseDB;
+
+    const deviceGrid   = document.getElementById("deviceGrid");
+    const usersGrid    = document.getElementById("usersGrid");
+    const devicesError = document.getElementById("devicesError");
+    const usersError   = document.getElementById("usersError");
+
+    function showError(el, msg){ el.style.display="block"; el.textContent=msg; }
+    function placeholder(el, text){ el.innerHTML = `<div class="placeholder">${text}</div>`; }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = "login.html?role=admin"; return; }
+      await Promise.all([loadUsers(), loadDevices()]);
+    });
+
+    async function loadUsers() {
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        if (snap.empty) { placeholder(usersGrid, "No users found."); return; }
+        usersGrid.innerHTML = "";
+        snap.forEach(docSnap => {
+          const u = docSnap.data();
+          usersGrid.innerHTML += `
+            <div class="user-card">
+              <div><b>${u.firstName || ""} ${u.lastName || ""}</b> &lt;${u.email || ""}&gt;</div>
+              <div>Role: ${u.role || "user"}</div>
+              <div>Devices: ${Array.isArray(u.devices) && u.devices.length ? u.devices.join(", ") : "—"}</div>
+            </div>`;
+        });
+      } catch (e) {
+        console.error(e);
+        showError(usersError, "Couldn't load users: " + e.message);
+        placeholder(usersGrid, "Users could not be loaded.");
+      }
+    }
+
+    async function loadDevices() {
+      deviceGrid.innerHTML = "";
+      // Try Schema A: top-level 'devices'
+      try {
+        const topSnap = await getDocs(collection(db, "devices"));
+        if (!topSnap.empty) {
+          topSnap.forEach(d => renderDeviceCard(d.id, d.data()));
+          return;
+        }
+      } catch (e) {
+        // continue to fallback
+        console.warn("Top-level devices read failed or empty:", e);
+      }
+
+      // Fallback Schema B: gather from each user's sub-collection 'devices'
+      try {
+        const userSnap = await getDocs(collection(db, "users"));
+        let count = 0;
+        for (const u of userSnap.docs) {
+          const subSnap = await getDocs(collection(db, "users", u.id, "devices"));
+          subSnap.forEach(d => { count++; renderDeviceCard(d.id, d.data(), u.id); });
+        }
+        if (count === 0) placeholder(deviceGrid, "No devices found. Create 'devices' collection or 'users/{uid}/devices'.");
+      } catch (e) {
+        console.error(e);
+        showError(devicesError, "Couldn't load devices: " + e.message);
+        placeholder(deviceGrid, "Devices could not be loaded.");
+      }
+    }
+
+    function renderDeviceCard(id, d = {}, ownerUid = null) {
+      deviceGrid.innerHTML += `
+        <div class="card">
+          <h3 style="margin-top:0">${d.name || "Device " + id}</h3>
+          <p><b>ID:</b> ${id}</p>
+          ${ownerUid ? `<p><b>Owner UID:</b> ${ownerUid}</p>` : ""}
+          <p><b>Location:</b> ${d.location || "-"}</p>
+          <p><b>Fragrance:</b> ${d.fragrance || "-"}</p>
+          <p><b>Oil Level:</b> ${d.oilLevel ?? 0}%</p>
+          <p><b>Status:</b> <span class="${d.status === "online" ? "status-online" : "status-offline"}">${d.status || "unknown"}</span></p>
+        </div>`;
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

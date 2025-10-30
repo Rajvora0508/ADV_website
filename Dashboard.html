@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aroma de Valencia | Dashboard</title>
+
+  <!-- Link your CSS -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Scripts -->
+  <script defer src="auth.js"></script>
+  <script defer src="devices.js"></script>
+
+  <!-- Force background to white -->
+  <style>
+    body.dashboard-body {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+    }
+  </style>
+</head>
+
+<body class="dashboard-body">
+  <div class="dashboard-shell">
+    <header class="dashboard-header">
+      <div class="dash-left">
+        <h1>Device Fleet Overview</h1>
+        <p>
+          All connected Aroma de Valencia diffusers. Oil level, status, last heartbeat.
+        </p>
+      </div>
+      <button id="logoutBtn" class="logout-btn">Log out</button>
+    </header>
+
+    <!-- Device Tiles -->
+    <section class="device-grid" id="deviceGrid">
+      <div class="device-card">
+        <div class="device-top">
+          <div class="device-name">Lobby Diffuser</div>
+          <div class="device-status online">Online</div>
+        </div>
+        <div class="device-body">
+          <span class="small-label">Location</span>
+          <div>Hotel Lobby - Pune</div>
+
+          <span class="small-label">Fragrance</span>
+          <div>White Tea &amp; Oud</div>
+
+          <span class="small-label">Oil Level</span>
+          <div>28%</div>
+
+          <span class="small-label">Last Heartbeat</span>
+          <div>2025-10-28 14:12 IST</div>
+        </div>
+      </div>
+
+      <div class="device-card">
+        <div class="device-top">
+          <div class="device-name">Spa Room 2</div>
+          <div class="device-status online">Online</div>
+        </div>
+        <div class="device-body">
+          <span class="small-label">Location</span>
+          <div>Wellness Floor – Mumbai</div>
+
+          <span class="small-label">Fragrance</span>
+          <div>Lavender Calm</div>
+
+          <span class="small-label">Oil Level</span>
+          <div>72%</div>
+
+          <span class="small-label">Last Heartbeat</span>
+          <div>2025-10-28 14:10 IST</div>
+        </div>
+      </div>
+
+      <div class="device-card">
+        <div class="device-top">
+          <div class="device-name">Showroom Demo Unit</div>
+          <div class="device-status offline">Offline</div>
+        </div>
+        <div class="device-body">
+          <span class="small-label">Location</span>
+          <div>Aroma de Valencia HQ Lab</div>
+
+          <span class="small-label">Fragrance</span>
+          <div>Citrus Neroli</div>
+
+          <span class="small-label">Oil Level</span>
+          <div>0%</div>
+
+          <span class="small-label">Last Heartbeat</span>
+          <div>2025-10-28 09:01 IST</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

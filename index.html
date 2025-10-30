@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aroma de Valencia | Portal Selection</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="portal-body">
+  <script type="module" src="firebase.js"></script>
+
+  <header class="portal-header">
+    <img src="assets/aroma_de_valencia.png" alt="Aroma de Valencia Logo" class="brand-logo-lg" />
+    <p class="portal-subtitle">Choose a portal to continue</p>
+  </header>
+
+  <main class="role-container">
+    <section class="role-card" onclick="goToLogin('admin')" role="button" tabindex="0" aria-label="Go to Admin Dashboard login">
+      <h2 class="role-title">Admin Dashboard</h2>
+      <p class="role-desc">Manage and monitor all Aroma diffusers. View device status, assign users, and control activation remotely.</p>
+    </section>
+
+    <section class="role-card" onclick="goToLogin('user')" role="button" tabindex="0" aria-label="Go to User Dashboard login">
+      <h2 class="role-title">User Dashboard</h2>
+      <p class="role-desc">View your assigned diffusers, track oil levels in real time, and control your devices from anywhere.</p>
+    </section>
+  </main>
+
+  <footer class="portal-footer">Secure access · Activity is monitored.</footer>
+
+  <script>
+    function goToLogin(role) {
+      window.location.href = "login.html?role=" + encodeURIComponent(role);
+    }
+  </script>
+</body>
+</html>
