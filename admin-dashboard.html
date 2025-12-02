@@ -2,122 +2,657 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aroma De Valencia | Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f5f2; --card:#ffffff; --card-2:#f3ece6;
+      --accent:#8b5e34; --accent-2:#b98b5d;
+      --text:#1a110b; --muted:#6b5a4a;
+      --success:#2c7a4b; --danger:#c0392b;
+      --chip-bg:#efe7df; --shadow:0 8px 24px rgba(27,17,11,.08);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,Helvetica,sans-serif}
+    .container{max-width:1400px;margin:0 auto;padding:24px}
+
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand__logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:var(--shadow)}
+    .brand__title{font-weight:700;letter-spacing:.3px}
+    .topbar__right{display:flex;gap:10px;align-items:center}
+    .chip{padding:6px 10px;border-radius:999px;background:var(--chip-bg);color:var(--text);font-size:12px;border:1px solid rgba(27,17,11,.08)}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+    .col-4{grid-column:span 4}
+    .col-6{grid-column:span 6}
+    .col-8{grid-column:span 8}
+    .col-12{grid-column:span 12}
+    @media (max-width:980px){ .col-4,.col-6,.col-8{grid-column:span 12} }
+
+    .card{background:linear-gradient(180deg,var(--card),var(--card-2));border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(27,17,11,.08);overflow:hidden}
+    .card__header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(27,17,11,.08)}
+    .card__title{font-size:16px;font-weight:700;letter-spacing:.2px}
+    .card__body{padding:18px}
+    .btn{appearance:none;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    .btn--ghost{background:transparent;color:var(--accent);border:1px solid rgba(27,17,11,.15)}
+    .btn--danger{background:var(--danger);color:#fff;border:none}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .input{padding:10px 12px;border-radius:10px;border:1px solid rgba(27,17,11,.15);font:inherit}
+
+    .account{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center}
+    .avatar{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:grid;place-items:center;color:#fff;font-weight:900}
+    .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px}
+    .kv .k{color:var(--muted)}
+    .kv .v{font-weight:600; overflow-wrap:anywhere; word-break:break-all;}
+
+    .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .pill{padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.03);border:1px solid rgba(27,17,11,.08);font-size:12px}
+    .status{font-size:12px;padding:4px 8px;border-radius:999px}
+    .status--online{background:rgba(39,174,96,.15);color:var(--success);border:1px solid rgba(39,174,96,.35)}
+    .status--offline{background:rgba(231,76,60,.15);color:var(--danger);border:1px solid rgba(231,76,60,.35)}
+    .status--disabled{background:rgba(127,140,141,.20);color:#7f8c8d;border:1px solid rgba(127,140,141,.35)}
+
+    table{width:100%;border-collapse:separate;border-spacing:0 10px}
+    thead th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:0 10px}
+    tbody tr{background:#fff}
+    tbody td{padding:12px 10px;border-top:1px solid rgba(27,17,11,.08);border-bottom:1px solid rgba(27,17,11,.08)}
+    tbody tr:first-child td{border-top-left-radius:12px;border-top-right-radius:12px}
+    tbody tr:last-child td{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
+
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal__card{background:#fff;border-radius:16px;max-width:420px;width:100%;box-shadow:var(--shadow);border:1px solid rgba(27,17,11,.08)}
+    .modal__head{padding:16px 18px;border-bottom:1px solid rgba(27,17,11,.08);font-weight:700}
+    .modal__body{padding:18px;display:flex;flex-direction:column;gap:12px}
+
+    .selectable{ cursor:pointer; transition:background .12s ease; }
+    .selectable:hover{ background:#fff9f4; }
+    .is-selected{ outline:2px solid var(--accent); outline-offset:-2px; }
+
+    .row-inline{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+
+    .no-scroll{overflow:visible !important}
+
+    /* Toggle switch */
+    .toggle{
+      position:relative; width:48px; height:28px; border-radius:999px;
+      background:#ddd; display:inline-block; vertical-align:middle; cursor:pointer;
+      border:1px solid rgba(0,0,0,.1);
+      transition:background .15s ease;
+    }
+    .toggle input{ display:none; }
+    .toggle .knob{
+      position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%;
+      background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.15); transition:left .15s ease;
+    }
+    .toggle.is-on{ background:#2ecc71; }
+    .toggle.is-on .knob{ left:23px; }
+  </style>
 </head>
 <body>
-  <script type="module" src="firebase.js"></script>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand__logo"></div>
+        <div class="brand__title">Admin Dashboard</div>
+      </div>
+      <div class="topbar__right">
+        <span id="adminEmailChip" class="chip">Signed out</span>
+        <button id="openLoginBtn" class="btn--ghost btn" title="Sign in">Sign in</button>
+        <button id="signOutBtn" class="btn btn--ghost" title="Sign out" style="display:none">Sign out</button>
+      </div>
+    </div>
 
-  <header style="text-align:center; padding:20px;">
-    <img src="assets/aroma_de_valencia.png" class="brand-logo-lg" alt="Logo">
-    <h2>Admin Dashboard</h2>
-    <p>Monitor and manage all connected Aroma Diffusers</p>
-    <button class="logout-btn" id="logoutBtn">Logout</button>
-  </header>
+    <div class="grid">
+      <!-- Admin account -->
+      <section class="card col-8" id="accountCard">
+        <header class="card__header">
+          <div class="card__title">Account</div>
+        </header>
+        <div class="card__body">
+          <div class="account">
+            <div class="avatar" id="avatar">A</div>
+            <div class="kv">
+              <div class="k">Name</div><div class="v" id="accName">—</div>
+              <div class="k">Email</div><div class="v" id="accEmail">—</div>
+              <div class="k">Role</div><div class="v" id="accRole">—</div>
+            </div>
+            <div>
+              <div class="pill" id="planPill">Admin</div>
+            </div>
+          </div>
 
-  <main style="padding: 0 20px 30px;">
-    <section class="section" id="devicesSection">
-      <h3 style="color:#5b2525;">All Devices</h3>
-      <div id="devicesError" class="error-banner"></div>
-      <div class="grid" id="deviceGrid"></div>
-    </section>
+          <div class="stats">
+            <span class="pill" id="selUserCount">Users: —</span>
+            <span class="pill" id="selDevCount">Devices: —</span>
+            <span class="pill" id="selEvtCount">Events: —</span>
+          </div>
 
-    <section class="section" id="usersSection" style="margin-top:28px;">
-      <h3 style="color:#5b2525;">Registered Users</h3>
-      <div id="usersError" class="error-banner"></div>
-      <div class="grid" id="usersGrid"></div>
-    </section>
-  </main>
+          <div class="row-inline" id="adminMacPwdRow">
+            <input id="adminMacInput" class="input" placeholder="MAC ID" />
+            <input id="adminPwdInput" class="input" type="password" placeholder="Password" />
+            <button class="btn btn--ghost" id="adminMacPwdSaveBtn" title="Save (optional)">Save</button>
+          </div>
+        </div>
+      </section>
 
-  <script type="module">
-    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+      <!-- Users list -->
+      <section class="card col-12" id="usersCard">
+        <header class="card__header">
+          <div class="card__title">Registered Users</div>
+          <div>
+            <input id="userSearch" class="input" placeholder="Search email or role"/>
+            <button class="btn btn--ghost" id="refreshUsersBtn">Refresh</button>
+          </div>
+        </header>
+        <div class="card__body">
+          <div class="no-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Devices</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
-    const auth = window.firebaseAuth;
-    const db   = window.firebaseDB;
+      <!-- Selected user Devices -->
+      <section class="card col-12" id="devicesCard">
+        <header class="card__header">
+          <div class="card__title">Selected User – Devices</div>
+          <div>
+            <span class="pill" id="selectedUserEmail">—</span>
+            <button class="btn btn--ghost" id="refreshDevicesBtn">Refresh</button>
+          </div>
+        </header>
+        <div class="card__body">
+          <div id="devicesList"></div>
+        </div>
+      </section>
 
-    const deviceGrid   = document.getElementById("deviceGrid");
-    const usersGrid    = document.getElementById("usersGrid");
-    const devicesError = document.getElementById("devicesError");
-    const usersError   = document.getElementById("usersError");
+      <!-- Selected user Events -->
+      <section class="card col-12" id="eventsCard">
+        <header class="card__header">
+          <div class="card__title">Selected User – Events</div>
+          <div>
+            <button class="btn btn--ghost" id="refreshEventsBtn">Refresh</button>
+          </div>
+        </header>
+        <div class="card__body">
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Device</th>
+                  <th>Days</th>
+                  <th>Time</th>
+                  <th>Work/Pause</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
 
-    function showError(el, msg){ el.style.display="block"; el.textContent=msg; }
-    function placeholder(el, text){ el.innerHTML = `<div class="placeholder">${text}</div>`; }
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal" aria-hidden="true">
+    <div class="modal__card">
+      <div class="modal__head">Admin sign in</div>
+      <div class="modal__body">
+        <input id="loginEmail" class="input" type="email" placeholder="Email"/>
+        <input id="loginPass" class="input" type="password" placeholder="Password"/>
+        <div id="loginMsg" style="color:var(--danger);min-height:18px;font-size:13px;"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button id="closeLoginBtn" class="btn--ghost btn">Cancel</button>
+          <button id="doLoginBtn" class="btn">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = "login.html?role=admin"; return; }
-      await Promise.all([loadUsers(), loadDevices()]);
-    });
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
-    async function loadUsers() {
-      try {
-        const snap = await getDocs(collection(db, "users"));
-        if (snap.empty) { placeholder(usersGrid, "No users found."); return; }
-        usersGrid.innerHTML = "";
-        snap.forEach(docSnap => {
-          const u = docSnap.data();
-          usersGrid.innerHTML += `
-            <div class="user-card">
-              <div><b>${u.firstName || ""} ${u.lastName || ""}</b> &lt;${u.email || ""}&gt;</div>
-              <div>Role: ${u.role || "user"}</div>
-              <div>Devices: ${Array.isArray(u.devices) && u.devices.length ? u.devices.join(", ") : "—"}</div>
-            </div>`;
+  <script>
+    /* CONFIG */
+    var firebaseConfig = {
+      apiKey: "AIzaSyBcspj0dr9gQT_KvGXofCu-FCoFiQrGsK0",
+      authDomain: "smart-aroma-mob-app.firebaseapp.com",
+      projectId: "smart-aroma-mob-app",
+      storageBucket: "smart-aroma-mob-app.firebasestorage.app",
+      messagingSenderId: "447169756481",
+      appId: "1:447169756481:web:49b4d914f2a0a7c2db75c0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var auth = firebase.auth();
+    var db   = firebase.firestore();
+
+    /* HELPERS */
+    function $(q){ return document.querySelector(q); }
+    function pad2(n){ n=parseInt(n,10); if(isNaN(n)) return '00'; return (n<10? '0'+n : ''+n); }
+    function setAvatarFromName(name){ var l=(name||'A').trim(); l=l?l[0].toUpperCase():'A'; $('#avatar').textContent=l; }
+    function makeStatusSpan(isOnline){
+      var s=document.createElement('span');
+      s.className='status ' + (isOnline==='disabled' ? 'status--disabled' : (isOnline ? 'status--online' : 'status--offline'));
+      s.textContent = (isOnline==='disabled') ? 'Disabled' : (isOnline ? 'Online' : 'Offline');
+      return s;
+    }
+
+    /* RENDERERS */
+    function renderUsers(list){
+      var body = $('#usersTbody'); body.innerHTML='';
+      if(!list.length){ body.innerHTML='<tr><td colspan="5" style="color:var(--muted)">No users</td></tr>'; return; }
+      list.forEach(function(u){
+        var tr=document.createElement('tr');
+        tr.classList.add('selectable');
+        tr.dataset.uid = u.id || '';
+        tr.dataset.email = u.email || '';
+
+        tr.innerHTML =
+          '<td><span class="pill">'+(u.id||'—')+'</span></td>'+
+          '<td>'+ (u.email||'—') +'</td>'+
+          '<td>'+ (u.role||'—') +'</td>'+
+          '<td>'+ (typeof u.devicesCount==='number'? u.devicesCount : '—') +'</td>'+
+          '<td style="display:flex;gap:8px;flex-wrap:wrap">'+
+            '<button class="btn btn--ghost" data-view="'+(u.id||'')+'">View</button>'+
+            '<button class="btn btn--danger" data-del="'+(u.id||'')+'">Delete</button>'+
+          '</td>';
+
+        tr.addEventListener('click', function(e){
+          if(e.target && (e.target.matches('button[data-view]') || e.target.matches('button[data-del]'))) return;
+          selectUser(u);
+          markSelectedRow(u.id);
         });
-      } catch (e) {
-        console.error(e);
-        showError(usersError, "Couldn't load users: " + e.message);
-        placeholder(usersGrid, "Users could not be loaded.");
+
+        body.appendChild(tr);
+      });
+
+      body.querySelectorAll('[data-view]').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          var uid = this.getAttribute('data-view');
+          var chosen = list.find(function(x){ return x.id===uid; }) || {};
+          selectUser(chosen);
+          markSelectedRow(uid);
+        });
+      });
+
+      body.querySelectorAll('[data-del]').forEach(function(btn){
+        btn.addEventListener('click', async function(e){
+          e.stopPropagation();
+          var uid = this.getAttribute('data-del');
+          var email = (list.find(x=>x.id===uid)||{}).email || uid;
+          if(!confirm('Delete user "'+email+'" and all their data? This cannot be undone.')) return;
+          try{
+            await deleteUserCompletely(uid);
+            await loadUsersWithCounts().then(function(l){ currentUsersCache=l; });
+            if(selectedUser && selectedUser.id===uid){ selectedUser=null; $('#devicesList').innerHTML=''; $('#eventsTbody').innerHTML=''; $('#selectedUserEmail').textContent='—'; }
+          }catch(err){
+            console.error(err);
+            alert('Failed to delete user: '+(err && err.message ? err.message : err));
+          }
+        });
+      });
+
+      if(selectedUser && selectedUser.id){ markSelectedRow(selectedUser.id); }
+    }
+
+    function markSelectedRow(uid){
+      document.querySelectorAll('#usersTbody tr').forEach(function(tr){
+        tr.classList.toggle('is-selected', tr.dataset.uid === uid);
+      });
+    }
+
+    /* === DEVICE TOGGLE RENDER === */
+    function renderDevices(list){
+      var host = $('#devicesList'); host.innerHTML='';
+      if(!list.length){ host.innerHTML='<div class="pill" style="display:inline-block">No devices</div>'; return; }
+
+      list.forEach(function(d){
+        var name = d.name || d.deviceName || d.title || d.deviceId || 'Device';
+        var ip   = d.ip || d.ipAddress || d.localIp || '—';
+
+        // Determine disabled/online
+        var isDisabled = (typeof d.disabled === 'boolean') ? d.disabled :
+                         (String(d.status||'').toLowerCase() === 'disabled' || d.active === false);
+        var st   = (d.status||'').toString().toLowerCase();
+        var online = isDisabled ? 'disabled' :
+                     (typeof d.online==='boolean') ? d.online :
+                     (st==='online'||st==='active'||st==='connected');
+
+        var row = document.createElement('div');
+        row.style.cssText='display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px 14px;border-radius:14px;border:1px solid rgba(27,17,11,.08);margin-bottom:10px';
+
+        var left = document.createElement('div'); left.style.cssText='display:flex;gap:14px;align-items:center';
+        left.innerHTML = '<strong>'+name+'</strong><span class="pill">'+ip+'</span>';
+
+        var right = document.createElement('div'); right.style.cssText='display:flex;gap:12px;align-items:center';
+
+        // Toggle element
+        var togg = document.createElement('label');
+        togg.className = 'toggle' + (isDisabled ? '' : ' is-on');
+        togg.title = isDisabled ? 'Enable device' : 'Disable device';
+        var inp = document.createElement('input'); inp.type='checkbox'; inp.checked = !isDisabled;
+        var knob = document.createElement('span'); knob.className='knob';
+        togg.appendChild(inp); togg.appendChild(knob);
+
+        // Status chip
+        right.appendChild(makeStatusSpan(online));
+        right.appendChild(togg);
+
+        // Hook change
+        inp.addEventListener('change', async function(){
+          var enabled = this.checked;
+          // visual feedback
+          togg.classList.toggle('is-on', enabled);
+          togg.title = enabled ? 'Disable device' : 'Enable device';
+          inp.disabled = true;
+          try{
+            await setDeviceEnabledForAllPlaces(d, (selectedUser && selectedUser.id) ? selectedUser.id : null, enabled);
+            // Reload devices to reflect latest values
+            const devs = await devicesForUser(selectedUser.id);
+            renderDevices(devs);
+            $('#selDevCount').textContent = 'Devices: ' + devs.length;
+          }catch(e){
+            console.error(e);
+            alert('Failed to update device status. ' + (e && e.message ? e.message : ''));
+            // revert UI
+            this.checked = !enabled;
+            togg.classList.toggle('is-on', this.checked);
+          }finally{
+            inp.disabled = false;
+          }
+        });
+
+        row.appendChild(left);
+        row.appendChild(right);
+        host.appendChild(row);
+      });
+    }
+
+    function renderEvents(list){
+      var body = $('#eventsTbody'); body.innerHTML='';
+      if(!list.length){ body.innerHTML='<tr><td colspan="6" style="color:var(--muted)">No events</td></tr>'; return; }
+      function timeOf(obj,p){ var h=obj[p+'Hour'], m=obj[p+'Min']; if(h!=null&&m!=null) return pad2(h)+':'+pad2(m);
+        var t=obj[p]||obj[p+'Time']; return t?(''+t).slice(0,5):'--:--'; }
+      list.forEach(function(ev){
+        var name = ev.eventName||ev.name||ev.event||ev.title||'Event';
+        var device = ev.deviceName||ev.deviceId||ev.device||'—';
+        var days = Array.isArray(ev.days)? ev.days.join(' ') : (ev.daysString||ev.days||'—');
+        var time = timeOf(ev,'start')+'–'+timeOf(ev,'stop');
+        var onS  = (ev.onSec!=null)?ev.onSec : ((ev.workSec!=null)?ev.workSec : ((ev.cycle&&ev.cycle.on!=null)?ev.cycle.on:0));
+        var offS = (ev.offSec!=null)?ev.offSec: ((ev.pauseSec!=null)?ev.pauseSec: ((ev.cycle&&ev.cycle.off!=null)?ev.cycle.off:0));
+        var active = (typeof ev.active==='boolean')? ev.active : ((ev.status||'').toString().toLowerCase()==='active');
+        var tr=document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>'+name+'</strong></td>'+
+          '<td>'+device+'</td>'+
+          '<td><span class="pill">'+days+'</span></td>'+
+          '<td>'+time+'</td>'+
+          '<td>'+onS+'s / '+offS+'s</td>'+
+          '<td>'+(active?'<span class="status status--online">Active</span>':'<span class="status status--offline">Off</span>')+'</td>';
+        body.appendChild(tr);
+      });
+    }
+
+    /* SCHEMA */
+    var SCHEMA = {
+      usersPath: 'users',
+      devicesCollection: 'devices',
+      eventsCollection: 'events',
+      deviceOwnerField: 'ownerUid',
+      eventOwnerField: 'ownerUid'
+    };
+
+    /* DATA LOADERS */
+    function loadUsersWithCounts(){
+      return db.collection('users').get().then(function(s){
+        var users=[]; s.forEach(function(d){ users.push(Object.assign({id:d.id}, d.data())); });
+        $('#selUserCount').textContent = 'Users: ' + users.length;
+
+        var seq = Promise.resolve();
+        var limited = users.slice(0,200);
+        limited.forEach(function(u, idx){
+          seq = seq.then(function(){
+            return db.collection('users').doc(u.id).collection('devices').get()
+              .then(function(sub){ users[idx].devicesCount = sub.size; })
+              .catch(function(){ users[idx].devicesCount = users[idx].devicesCount||0; });
+          });
+        });
+        return seq.then(function(){ renderUsers(users); return users; });
+      }).catch(function(err){
+        console.error('Users load error:', err);
+        $('#usersTbody').innerHTML='<tr><td colspan="5" style="color:var(--danger)">Cannot read users (auth/rules)</td></tr>';
+        return [];
+      });
+    }
+
+    function devicesForUser(uid){
+      function tryFlat(){
+        return db.collection(SCHEMA.devicesCollection).where(SCHEMA.deviceOwnerField,'==',uid).get()
+          .then(snapToList);
+      }
+      function tryNested(){
+        return db.collection('users').doc(uid).collection('devices').get().then(snapToList);
+      }
+      function tryOwnersArray(){
+        return db.collection(SCHEMA.devicesCollection).where('owners','array-contains',uid).get()
+          .then(snapToList);
+      }
+      function snapToList(s){ var a=[]; s.forEach(function(d){ a.push(Object.assign({id:d.id}, d.data())); }); return a; }
+      return tryFlat().catch(()=>[]).then(function(list){
+        if(list.length) return list; return tryNested().catch(()=>[]);
+      }).then(function(list){
+        if(list.length) return list; return tryOwnersArray().catch(()=>[]);
+      });
+    }
+
+    function eventsForUser(uid, knownDevices){
+      function snapToList(s){ var a=[]; s.forEach(function(d){ a.push(Object.assign({id:d.id}, d.data())); }); return a; }
+      function flat(){ return db.collection(SCHEMA.eventsCollection).where(SCHEMA.eventOwnerField,'==',uid).get().then(snapToList); }
+      function nested(){ return db.collection('users').doc(uid).collection('events').get().then(snapToList); }
+      function underTopLevelDevices(){
+        var all=[]; var seq=Promise.resolve();
+        (knownDevices||[]).forEach(function(dev){
+          var devId=dev.id||dev.deviceId; if(!devId) return;
+          seq = seq.then(function(){
+            return db.collection('devices').doc(devId).collection('events').get()
+              .then(function(s){ s.forEach(function(x){ all.push(Object.assign({id:x.id, deviceId:devId, deviceName:(dev.name||dev.deviceName||'')}, x.data())); }); });
+          }).catch(function(){});
+        });
+        return seq.then(function(){ return all; });
+      }
+      function underUserDevices(){
+        var all=[]; var seq=Promise.resolve();
+        (knownDevices||[]).forEach(function(dev){
+          var devId=dev.id||dev.deviceId; if(!devId) return;
+          seq = seq.then(function(){
+            return db.collection('users').doc(uid).collection('devices').doc(devId).collection('events').get()
+              .then(function(s){ s.forEach(function(x){ all.push(Object.assign({id:x.id, deviceId:devId, deviceName:(dev.name||dev.deviceName||'')}, x.data())); }); });
+          }).catch(function(){});
+        });
+        return seq.then(function(){ return all; });
+      }
+
+      return flat().catch(()=>[]).then(function(list){
+        if(list.length) return list;
+        return nested().catch(()=>[]).then(function(l2){
+          if(l2.length) return l2;
+          return underUserDevices().then(function(l3){
+            if(l3.length) return l3;
+            return underTopLevelDevices();
+          });
+        });
+      });
+    }
+
+    /* DELETE USER helpers */
+    async function deleteByQuery(query){
+      const snap = await query.get();
+      while(!snap.empty){
+        const batch = db.batch();
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        const next = await query.get();
+        if(next.empty) break;
+      }
+    }
+    async function deleteCollection(ref){
+      const page = 300;
+      let snap = await ref.limit(page).get();
+      while(!snap.empty){
+        const batch = db.batch();
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        snap = await ref.limit(page).get();
+      }
+    }
+    async function deleteUserCompletely(uid){
+      const userRef = db.collection('users').doc(uid);
+      await deleteCollection(userRef.collection('devices'));
+      await deleteCollection(userRef.collection('events'));
+      await deleteByQuery(db.collection('devices').where('ownerUid','==',uid));
+      await deleteByQuery(db.collection('events').where('ownerUid','==',uid));
+      await userRef.delete();
+    }
+
+    /* Enable/Disable device in all likely locations */
+    async function setDeviceEnabledForAllPlaces(dev, uid, enabled){
+      const updates = { disabled: !enabled, active: enabled, status: enabled ? 'active' : 'disabled' };
+
+      // Possible IDs to try
+      const ids = [];
+      if (dev.id) ids.push(dev.id);
+      if (dev.deviceId && dev.deviceId !== dev.id) ids.push(dev.deviceId);
+
+      // Update top-level devices
+      await Promise.all(ids.map(id =>
+        db.collection('devices').doc(id).set(updates, {merge:true}).catch(()=>{})
+      ));
+
+      // Update under user subtree
+      if(uid){
+        await Promise.all(ids.map(id =>
+          db.collection('users').doc(uid).collection('devices').doc(id).set(updates, {merge:true}).catch(()=>{})
+        ));
       }
     }
 
-    async function loadDevices() {
-      deviceGrid.innerHTML = "";
-      // Try Schema A: top-level 'devices'
-      try {
-        const topSnap = await getDocs(collection(db, "devices"));
-        if (!topSnap.empty) {
-          topSnap.forEach(d => renderDeviceCard(d.id, d.data()));
+    /* SELECTION FLOW */
+    var currentUsersCache = [];
+    var selectedUser = null;
+
+    function selectUser(u){
+      selectedUser = u || null;
+      $('#selectedUserEmail').textContent = (u && u.email) ? u.email : '—';
+      $('#selDevCount').textContent = 'Devices: —';
+      $('#selEvtCount').textContent = 'Events: —';
+      $('#devicesList').innerHTML=''; $('#eventsTbody').innerHTML='';
+
+      if(!u || !u.id) return;
+
+      devicesForUser(u.id).then(function(devs){
+        renderDevices(devs);
+        $('#selDevCount').textContent = 'Devices: ' + devs.length;
+        return eventsForUser(u.id, devs);
+      }).then(function(evts){
+        renderEvents(evts||[]);
+        $('#selEvtCount').textContent = 'Events: ' + (evts?evts.length:0);
+      }).catch(function(e){
+        console.error(e);
+      });
+    }
+
+    /* AUTH + BOOT */
+    function setAuthedUI(user, role){
+      $('#adminEmailChip').textContent = user ? (user.email||'Signed in') : 'Signed out';
+      $('#openLoginBtn').style.display = user ? 'none' : 'inline-block';
+      $('#signOutBtn').style.display   = user ? 'inline-block' : 'none';
+      $('#accEmail').textContent = user ? (user.email||'—') : '—';
+      $('#accName').textContent  = user && user.displayName ? user.displayName : '—';
+      $('#accRole').textContent  = role || '—';
+      setAvatarFromName(user ? (user.displayName||user.email||'Admin') : 'Admin');
+    }
+
+    function fetchMyRole(uid){
+      return db.collection('users').doc(uid).get().then(function(doc){
+        var data = doc.exists ? doc.data() : {};
+        return data.role || 'user';
+      });
+    }
+
+    function startApp(user){
+      fetchMyRole(user.uid).then(function(role){
+        setAuthedUI(user, role);
+        if(role!=='admin'){
+          document.querySelectorAll('.card').forEach(function(c){ c.style.opacity = 0.5; });
+          $('#usersTbody').innerHTML='<tr><td colspan="5" style="color:var(--danger)">Not an admin. Ask admin to set your role.</td></tr>';
           return;
         }
-      } catch (e) {
-        // continue to fallback
-        console.warn("Top-level devices read failed or empty:", e);
-      }
-
-      // Fallback Schema B: gather from each user's sub-collection 'devices'
-      try {
-        const userSnap = await getDocs(collection(db, "users"));
-        let count = 0;
-        for (const u of userSnap.docs) {
-          const subSnap = await getDocs(collection(db, "users", u.id, "devices"));
-          subSnap.forEach(d => { count++; renderDeviceCard(d.id, d.data(), u.id); });
-        }
-        if (count === 0) placeholder(deviceGrid, "No devices found. Create 'devices' collection or 'users/{uid}/devices'.");
-      } catch (e) {
-        console.error(e);
-        showError(devicesError, "Couldn't load devices: " + e.message);
-        placeholder(deviceGrid, "Devices could not be loaded.");
-      }
+        return loadUsersWithCounts().then(function(list){
+          currentUsersCache = list;
+          if(list.length){ selectUser(list[0]); markSelectedRow(list[0].id); }
+        });
+      }).catch(function(e){ console.error(e); });
     }
 
-    function renderDeviceCard(id, d = {}, ownerUid = null) {
-      deviceGrid.innerHTML += `
-        <div class="card">
-          <h3 style="margin-top:0">${d.name || "Device " + id}</h3>
-          <p><b>ID:</b> ${id}</p>
-          ${ownerUid ? `<p><b>Owner UID:</b> ${ownerUid}</p>` : ""}
-          <p><b>Location:</b> ${d.location || "-"}</p>
-          <p><b>Fragrance:</b> ${d.fragrance || "-"}</p>
-          <p><b>Oil Level:</b> ${d.oilLevel ?? 0}%</p>
-          <p><b>Status:</b> <span class="${d.status === "online" ? "status-online" : "status-offline"}">${d.status || "unknown"}</span></p>
-        </div>`;
-    }
-
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "login.html";
+    auth.onAuthStateChanged(function(user){
+      if (!user) {
+        setAuthedUI(null, null);
+        $('#usersTbody').innerHTML=''; $('#devicesList').innerHTML=''; $('#eventsTbody').innerHTML='';
+        openModal(); return;
+      }
+      startApp(user);
     });
+
+    /* UI BUTTONS */
+    function openModal(){ var m=$('#loginModal'); m.style.display='flex'; m.setAttribute('aria-hidden','false'); }
+    function closeModal(){ var m=$('#loginModal'); m.style.display='none'; m.setAttribute('aria-hidden','true'); }
+
+    $('#openLoginBtn').addEventListener('click', openModal);
+    $('#closeLoginBtn').addEventListener('click', closeModal);
+    $('#doLoginBtn').addEventListener('click', function(){
+      var email = $('#loginEmail').value || '';
+      var pass  = $('#loginPass').value || '';
+      var msgEl = $('#loginMsg'); msgEl.textContent='';
+      if(!email||!pass){ msgEl.textContent='Enter email and password.'; return; }
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(function(){ closeModal(); })
+        .catch(function(err){ console.error(err); msgEl.textContent = err && err.message ? err.message : 'Sign-in failed.'; });
+    });
+    $('#signOutBtn').addEventListener('click', function(){ auth.signOut(); });
+
+    $('#refreshUsersBtn').addEventListener('click', function(){
+      loadUsersWithCounts().then(function(list){ currentUsersCache=list; if(selectedUser) markSelectedRow(selectedUser.id); });
+    });
+    $('#userSearch').addEventListener('input', function(){
+      var q=this.value.trim().toLowerCase();
+      var filtered=currentUsersCache.filter(function(u){
+        var em=(u.email||'').toLowerCase(); var rl=(u.role||'').toLowerCase();
+        return em.includes(q)||rl.includes(q)|| (u.id||'').toLowerCase().includes(q);
+      });
+      renderUsers(filtered);
+    });
+    $('#refreshDevicesBtn').addEventListener('click', function(){ if(selectedUser) selectUser(selectedUser); });
+    $('#refreshEventsBtn').addEventListener('click', function(){ if(selectedUser) selectUser(selectedUser); });
   </script>
 </body>
 </html>

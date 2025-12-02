@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aroma de Valencia | Sign In</title>
   <link rel="stylesheet" href="style.css" />
+
   <script>
+    // Role comes from query (?role=admin|user); default is USER now.
     function getRoleFromQuery() {
       const params = new URLSearchParams(window.location.search);
-      const role = params.get("role");
-      return role === "user" ? "user" : "admin";
+      const role = (params.get("role") || "").toLowerCase();
+      return role === "admin" ? "admin" : "user";    // <— default user
     }
+
     window.addEventListener("DOMContentLoaded", () => {
       const role = getRoleFromQuery();
       document.getElementById("loginSubline").textContent =
@@ -19,7 +22,9 @@
     });
   </script>
 </head>
+
 <body class="auth-page-body">
+  <!-- Firebase initialization (must set window.firebaseAuth & window.firebaseDB) -->
   <script type="module" src="firebase.js"></script>
 
   <div class="auth-shell">
@@ -30,18 +35,21 @@
         <div class="brand-sub" id="loginSubline">...</div>
       </section>
 
-      <div id="loginMsg" class="error-banner"></div>
+      <div id="loginMsg" class="error-banner" style="display:none"></div>
 
       <form id="loginForm">
-        <input type="hidden" id="loginRole" value="admin" />
+        <input type="hidden" id="loginRole" value="user" /> <!-- default user -->
+
         <div class="form-group">
           <label class="form-label" for="loginEmail">Email</label>
           <input class="form-input" id="loginEmail" type="email" required placeholder="user@company.com" />
         </div>
+
         <div class="form-group password-field">
           <label class="form-label" for="loginPassword">Password</label>
           <input class="form-input" id="loginPassword" type="password" required placeholder="••••••••" />
         </div>
+
         <button class="btn-primary" type="submit">Sign In</button>
       </form>
 
@@ -52,49 +60,101 @@
     </main>
   </div>
 
+  <!-- ===== MAIN SCRIPT ===== -->
   <script type="module">
-    import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import {
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import {
+      doc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
     const auth = window.firebaseAuth;
     const db   = window.firebaseDB;
-    const msg  = document.getElementById("loginMsg");
 
-    function showError(text) { msg.textContent = text; msg.style.display = "block"; }
+    const msgEl     = document.getElementById("loginMsg");
+    const roleInput = document.getElementById("loginRole");
+    const form      = document.getElementById("loginForm");
+    const emailEl   = document.getElementById("loginEmail");
+    const passEl    = document.getElementById("loginPassword");
 
-    // Auto-redirect if already signed in
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        await routeByRole(user.uid);
-      }
-    });
+    function showError(text) {
+      msgEl.textContent = text;
+      msgEl.style.display = "block";
+    }
+    function hideError() {
+      msgEl.style.display = "none";
+      msgEl.textContent = "";
+    }
 
-    async function routeByRole(uid) {
-      const userRef  = doc(db, "users", uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const role = userSnap.data().role || "user";
-        window.location.href = role === "admin" ? "admin-dashboard.html" : "user-dashboard.html";
+    // ---------- STRICT ADMIN ALLOWLIST ----------
+    const ADMIN_EMAILS = ["aroma.de.valencia@valencianutrition.com"];
+
+    async function hasAdminClaim(user) {
+      try {
+        const token = await user.getIdTokenResult(true);
+        return token?.claims?.admin === true;
+      } catch { return false; }
+    }
+
+    async function isAllowedAdmin(user) {
+      const email = (user?.email || "").toLowerCase();
+      if (ADMIN_EMAILS.includes(email)) return true;
+      return await hasAdminClaim(user);
+    }
+
+    async function routeAfterLogin(user) {
+      const role = (roleInput.value || "user").toLowerCase();
+      if (!user) return;
+
+      if (role === "admin") {
+        // Admin: allow only allowlisted email or admin claim
+        if (await isAllowedAdmin(user)) {
+          try {
+            await setDoc(
+              doc(db, "users", user.uid),
+              { email: user.email ?? "", role: "admin" },
+              { merge: true }
+            );
+          } catch {}
+          window.location.href = "admin-dashboard.html";
+        } else {
+          await signOut(auth);
+          showError("You are not authorized for the Admin Console.");
+        }
       } else {
-        // If no Firestore user doc, create minimal one using the page's selected role
-        const fallbackRole = document.getElementById("loginRole").value || "user";
-        await setDoc(userRef, { role: fallbackRole, email: auth.currentUser?.email || "" }, { merge: true });
-        window.location.href = fallbackRole === "admin" ? "admin-dashboard.html" : "user-dashboard.html";
+        // User: upsert a user doc with role=user if missing
+        try {
+          const uRef = doc(db, "users", user.uid);
+          const uSnap = await getDoc(uRef);
+          if (!uSnap.exists()) {
+            await setDoc(uRef, { email: user.email ?? "", role: "user", devices: [] }, { merge: true });
+          }
+        } catch {}
+        window.location.href = "user-dashboard.html";
       }
     }
 
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.style.display = "none";
+    // Already signed in? Route immediately based on selected role
+    onAuthStateChanged(auth, async (user) => {
+      if (user) await routeAfterLogin(user);
+    });
 
-      const email    = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
+    // ---- LOGIN SUBMIT ----
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const email = emailEl.value.trim();
+      const pass  = passEl.value;
 
       try {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        await routeByRole(cred.user.uid);
+        const { user } = await signInWithEmailAndPassword(auth, email, pass);
+        await routeAfterLogin(user);
       } catch (err) {
-        showError(err.message);
+        showError(err?.message || "Sign-in failed.");
       }
     });
   </script>

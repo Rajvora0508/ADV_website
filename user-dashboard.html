@@ -2,279 +2,565 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aroma De Valencia | User Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-  /* ===== Keep device tile brown but improve contrast ===== */
- .card {
-  background: #6b2e2e;       /* brown tile */
-  color: #fffaf9;
-  border-radius: 12px;
-  padding: 10px 12px;        /* compact height */
-  border: 1px solid #532020;
-  max-width: 850px;          /* controls total width */
-  margin-left: 40px;         /* 🔹 left alignment + small space from edge */
-  margin-bottom: 15px;       /* gap between tiles */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  transition: all 0.2s ease-in-out;
-}
-  .card h3, 
-  .card p, 
-  .card b {
-    color: #fffaf9;
-  }
+    :root{
+      /* White + Brown theme */
+      --bg:#f7f5f2;
+      --card:#ffffff;
+      --card-2:#f3ece6;
+      --accent:#8b5e34;
+      --accent-2:#b98b5d;
+      --text:#1a110b;
+      --muted:#6b5a4a;
+      --success:#2c7a4b;
+      --danger:#c0392b;
+      --chip-bg:#efe7df;
+      --shadow: 0 8px 24px rgba(27,17,11,.08);
+      --radius: 20px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,Helvetica,sans-serif}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
 
-  /* ===== Event list visually distinct but harmonious ===== */
-  .event-list {
-    margin-top: 10px;
-    background: #fff5ee;             /* light cream to contrast brown */
-    color: #3a1c1a;
-    border-radius: 10px;
-    padding: 10px;
-    border: 1px solid #f1d2ba;
-    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
-  }
+    /* Top bar */
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand__logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:var(--shadow)}
+    .brand__title{font-weight:700;letter-spacing:.3px}
+    .topbar__right{display:flex;gap:10px;align-items:center}
+    .chip{padding:6px 10px;border-radius:999px;background:var(--chip-bg);color:var(--text);font-size:12px;border:1px solid rgba(27,17,11,.08)}
 
-  .event-item {
-    background: #fff;
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    border: 1px solid #e0c8aa;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-  }
+    /* Grid */
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+    .col-4{grid-column:span 4}
+    .col-6{grid-column:span 6}
+    .col-8{grid-column:span 8}
+    .col-12{grid-column:span 12}
+    @media (max-width:980px){
+      .col-4,.col-6,.col-8{grid-column:span 12}
+    }
 
-  .event-item:hover {
-    background: #faefe5;             /* subtle highlight */
-  }
+    /* Cards */
+    .card{background:linear-gradient(180deg,var(--card),var(--card-2));border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(27,17,11,.08);overflow:hidden}
+    .card__header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(27,17,11,.08)}
+    .card__title{font-size:16px;font-weight:700;letter-spacing:.2px}
+    .card__body{padding:18px}
+    .btn{appearance:none;border:none;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    .btn--ghost{background:transparent;color:var(--accent);border:1px solid rgba(27,17,11,.15)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
 
-  /* Event titles and subtitles */
-  .event-title {
-    font-weight: 700;
-    color: #4b1c1c;
-  }
+    /* Account tile */
+    .account{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center}
+    .avatar{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:grid;place-items:center;color:#fff;font-weight:900}
+    .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px}
+    .kv .k{color:var(--muted)}
+    .kv .v{font-weight:600; overflow-wrap:anywhere; word-break:break-all;}
 
-  .event-sub {
-    font-size: 0.85rem;
-    opacity: 0.75;
-  }
+    /* Devices list */
+    .devices{display:flex;flex-direction:column;gap:12px}
+    .device{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px 14px;border-radius:14px;border:1px solid rgba(27,17,11,.08)}
+    .device .meta{display:flex;gap:14px;align-items:center}
+    .status{font-size:12px;padding:4px 8px;border-radius:999px}
+    .status--online{background:rgba(39,174,96,.15);color:var(--success);border:1px solid rgba(39,174,96,.35)}
+    .status--offline{background:rgba(231,76,60,.15);color:var(--danger);border:1px solid rgba(231,76,60,.35)}
+    .pill{padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.03);border:1px solid rgba(27,17,11,.08);font-size:12px}
 
-  /* Event details */
-  .event-details {
-    display: none;
-    background: #fffdfa;
-    border-radius: 8px;
-    margin-top: 6px;
-    padding: 8px 10px;
-    border-left: 4px solid #7b2e2e20;
-  }
+    /* Tables */
+    table{width:100%;border-collapse:separate;border-spacing:0 10px}
+    thead th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:0 10px}
+    tbody tr{background:#fff}
+    tbody td{padding:12px 10px;border-top:1px solid rgba(27,17,11,.08);border-bottom:1px solid rgba(27,17,11,.08)}
+    tbody tr:first-child td{border-top-left-radius:12px;border-top-right-radius:12px}
+    tbody tr:last-child td{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
 
-  /* Details button — teal for clarity */
-  .badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: #00796b;              /* teal contrast */
-    color: #fff;
-    font-size: 0.75em;
-    font-weight: 500;
-    margin-left: 8px;
-  }
-
-  .badge:hover {
-    background: #005b4f;
-  }
-</style>
+    /* Auth modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal__card{background:#fff;border-radius:16px;max-width:420px;width:100%;box-shadow:var(--shadow);border:1px solid rgba(27,17,11,.08)}
+    .modal__head{padding:16px 18px;border-bottom:1px solid rgba(27,17,11,.08);font-weight:700}
+    .modal__body{padding:18px;display:flex;flex-direction:column;gap:12px}
+    .input{padding:10px 12px;border-radius:10px;border:1px solid rgba(27,17,11,.15);font:inherit}
+    .row{display:flex;gap:10px;justify-content:flex-end}
+  </style>
 </head>
 <body>
-  <!-- IMPORTANT: Your firebase.js must set window.firebaseAuth and window.firebaseDB -->
-  <script type="module" src="firebase.js"></script>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand__logo"></div>
+        <div class="brand__title">User Dashboard</div>
+      </div>
+      <div class="topbar__right">
+        <span id="userEmailChip" class="chip">Signed out</span>
+        <button id="openLoginBtn" class="btn--ghost btn" title="Sign in">Sign in</button>
+        <button id="signOutBtn" class="btn btn--ghost" title="Sign out" style="display:none">Sign out</button>
+      </div>
+    </div>
 
-  <header style="text-align:center; padding:20px;">
-    <img src="assets/aroma_de_valencia.png" class="brand-logo-lg" alt="Logo">
-    <h2>User Dashboard</h2>
-    <p>Track and control your assigned Aroma Diffusers</p>
-    <button class="logout-btn" id="logoutBtn">Logout</button>
-  </header>
-
-  <main style="padding:0 20px 30px;">
-    <div id="userErr" class="error-banner" style="display:none;"></div>
-    <div class="grid" id="deviceGrid"></div>
-  </main>
-
-  <script type="module">
-    // --- Defensive guard in case firebase.js didn't load ---
-    if (!window.firebaseAuth || !window.firebaseDB) {
-      const banner = document.getElementById("userErr");
-      banner.textContent = "Firebase SDK not initialized. Check firebase.js import path.";
-      banner.style.display = "block";
-      throw new Error("firebase.js not loaded / window.firebaseAuth undefined");
-    }
-
-    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import {
-      doc, getDoc, collection, getDocs, limit, query
-    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-    const auth = window.firebaseAuth;
-    const db   = window.firebaseDB;
-
-    const grid = document.getElementById("deviceGrid");
-    const err  = document.getElementById("userErr");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    function showError(t){ err.textContent=t; err.style.display="block"; }
-    function placeholder(text){ grid.innerHTML = `<div class="placeholder">${text}</div>`; }
-
-    function fmt(val){
-      if (val == null) return "-";
-      if (Array.isArray(val)) return `[${val.join(", ")}]`;
-      if (val && typeof val === "object" && typeof val.toDate === "function") {
-        try { return val.toDate().toLocaleString(); } catch { return String(val); }
-      }
-      if (typeof val === "object") return JSON.stringify(val, (_, v) => (v && typeof v.toDate === "function" ? v.toDate() : v), 2);
-      return String(val);
-    }
-
-    function detailsKV(data){
-      const rows = [];
-      for (const [k,v] of Object.entries(data)) {
-        if (k === "id") continue;
-        rows.push(`<div class="k">${k}</div><div class="v">${fmt(v)}</div>`);
-      }
-      if (!rows.length) return `<div class="muted">No extra fields.</div>`;
-      return `<div class="kv">${rows.join("")}</div>`;
-    }
-
-    function deviceCard(id, d, eventsHtml){
-      return `<div class="card">
-        <h3 style="margin-top:0">${d.name || "Device " + id}</h3>
-        <p><b>ID:</b> ${id}</p>
-        <p><b>Location:</b> ${d.location || "-"}</p>
-        <p><b>Fragrance:</b> ${d.fragrance || "-"}</p>
-        <p><b>Oil Level:</b> ${d.oilLevel ?? 0}%</p>
-        <p><b>Status:</b> <span class="${d.status === "online" ? "status-online" : "status-offline"}">${d.status || "unknown"}</span></p>
-        ${eventsHtml}
-      </div>`;
-    }
-
-    function eventListHtml(deviceId, events) {
-      if (!Array.isArray(events) || !events.length) {
-        return `<div class="event-list"><div class="event-item muted" style="cursor:default">No events found.</div></div>`;
-      }
-      const items = events.map(ev => {
-        const title = (ev.type || ev.eventType || "event");
-        const sub   = (ev.timestamp && typeof ev.timestamp.toDate === "function")
-          ? ev.timestamp.toDate().toLocaleString()
-          : (ev.name || ev.id);
-        const body  = detailsKV(ev);
-        const eid   = `${deviceId}__${ev.id}`.replace(/[^a-zA-Z0-9_-]/g,"_");
-        return `
-          <div class="event-item" data-eid="${eid}">
-            <div class="event-title">${title}<span class="badge">details</span></div>
-            <div class="event-sub">${sub || ""}</div>
-            <div class="event-details" id="det_${eid}">
-              ${body}
+    <div class="grid">
+      <!-- Account (made wider) -->
+      <section class="card col-6" id="accountCard">
+        <header class="card__header">
+          <div class="card__title">Account</div>
+          <button class="btn btn--ghost" id="editProfileBtn">Edit</button>
+        </header>
+        <div class="card__body">
+          <div class="account">
+            <div class="avatar" id="avatar">U</div>
+            <div class="kv">
+              <div class="k">Name</div><div class="v" id="accName">—</div>
+              <div class="k">Email</div><div class="v" id="accEmail">—</div>
+              <div class="k">User ID</div><div class="v" id="accUid">—</div>
             </div>
-          </div>`;
-      }).join("");
-      return `<div class="event-list" data-device="${deviceId}">${items}</div>`;
+            <div>
+              <div class="pill" id="planPill">Plan: Free</div>
+            </div>
+          </div>
+
+          <!-- ▼▼ ONLY ADDITION: two fill-in boxes (no other changes) ▼▼ -->
+          <div style="margin-top:14px; display:grid; grid-template-columns:120px 1fr; gap:8px 12px;">
+            <label for="macField" style="color:var(--muted); font-size:12px; align-self:center;">MAC ID</label>
+            <input id="macField" class="input" placeholder="e.g., 78:42:1C:CF:46:EE" autocomplete="off"/>
+
+            <label for="pwdField" style="color:var(--muted); font-size:12px; align-self:center;">Password</label>
+            <input id="pwdField" class="input" type="password" placeholder="Enter device password"/>
+          </div>
+          <!-- ▲▲ ONLY ADDITION ▲▲ -->
+
+        </div>
+      </section>
+
+      <!-- Devices (now half row too) -->
+      <section class="card col-6" id="devicesCard">
+        <header class="card__header">
+          <div class="card__title">My Devices</div>
+          <div>
+            <button class="btn btn--ghost" id="refreshDevicesBtn">Refresh</button>
+            <button class="btn" id="addDeviceBtn">+ Add</button>
+          </div>
+        </header>
+        <div class="card__body">
+          <div id="devicesList" class="devices"></div>
+        </div>
+      </section>
+
+      <!-- Events -->
+      <section class="card col-12" id="eventsCard">
+        <header class="card__header">
+          <div class="card__title">Events</div>
+          <button class="btn btn--ghost" id="refreshEventsBtn">Refresh</button>
+        </header>
+        <div class="card__body">
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Device</th>
+                  <th>Days</th>
+                  <th>Time</th>
+                  <th>Work/Pause</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Registered Users -->
+      <section class="card col-12" id="usersCard">
+        <header class="card__header">
+          <div class="card__title">Registered Users</div>
+          <div>
+            <input id="userSearch" class="input" placeholder="Search email or role"/>
+            <button class="btn btn--ghost" id="refreshUsersBtn">Refresh</button>
+          </div>
+        </header>
+        <div class="card__body">
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Devices</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal" aria-hidden="true">
+    <div class="modal__card">
+      <div class="modal__head">Sign in (Email / Password)</div>
+      <div class="modal__body">
+        <input id="loginEmail" class="input" type="email" placeholder="Email"/>
+        <input id="loginPass" class="input" type="password" placeholder="Password"/>
+        <div id="loginMsg" style="color:var(--danger);min-height:18px;font-size:13px;"></div>
+        <div class="row">
+          <button id="closeLoginBtn" class="btn btn--ghost">Cancel</button>
+          <button id="doLoginBtn" class="btn">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    /***********************
+     * FIREBASE CONFIG     *
+     ***********************/
+    var firebaseConfig = {
+      apiKey: "AIzaSyBcspj0dr9gQT_KvGXofCu-FCoFiQrGsK0",
+      authDomain: "smart-aroma-mob-app.firebaseapp.com",
+      projectId: "smart-aroma-mob-app",
+      storageBucket: "smart-aroma-mob-app.firebasestorage.app",
+      messagingSenderId: "447169756481",
+      appId: "1:447169756481:web:49b4d914f2a0a7c2db75c0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var auth = firebase.auth();
+    var db   = firebase.firestore();
+
+    /***********************
+     * HELPERS             *
+     ***********************/
+    function $(q){ return document.querySelector(q); }
+    function pad2(n){ n = parseInt(n,10); if(isNaN(n)) return '00'; return (n<10? '0'+n : ''+n); }
+    function setChip(text){ var el = $('#userEmailChip'); if(el){ el.textContent = text; } }
+    function setAvatarFromName(name){
+      var letter = (name||'U').toString().trim();
+      letter = letter ? letter.charAt(0).toUpperCase() : 'U';
+      var av = $('#avatar'); if(av){ av.textContent = letter; }
+    }
+    function makeStatusSpan(isOnline){
+      var s = document.createElement('span');
+      s.className = 'status ' + (isOnline ? 'status--online' : 'status--offline');
+      s.textContent = isOnline ? 'Online' : 'Offline';
+      return s;
     }
 
-    function wireEventToggles(container){
-      if (!container) return;
-      container.addEventListener("click", (e)=>{
-        const item = e.target.closest(".event-item");
-        if (!item) return;
-        const det = item.querySelector(".event-details");
-        det.style.display = det.style.display === "block" ? "none" : "block";
+    /***********************
+     * RENDERERS           *
+     ***********************/
+    function renderDevices(list){
+      var host = $('#devicesList'); if(!host) return;
+      host.innerHTML = '';
+      if(!list || list.length===0){
+        var empty = document.createElement('div');
+        empty.className = 'device';
+        empty.innerHTML = '<div class="meta">No devices found</div>';
+        host.appendChild(empty);
+        return;
+      }
+      for(var i=0;i<list.length;i++){
+        var d = list[i];
+        var row = document.createElement('div'); row.className='device';
+        var left = document.createElement('div'); left.className='meta';
+        var name = d.name || d.deviceName || d.title || d.deviceId || 'Device';
+        var ip   = d.ip || d.ipAddress || d.localIp || '—';
+        left.innerHTML = '<strong>'+name+'</strong><span class="pill">'+ip+'</span>';
+        var right = document.createElement('div');
+        var st = (d.status||'').toString().toLowerCase();
+        var online = (typeof d.online==='boolean') ? d.online : (st==='online'||st==='active'||st==='connected');
+        right.appendChild(makeStatusSpan(online));
+        row.appendChild(left); row.appendChild(right); host.appendChild(row);
+      }
+    }
+
+    function renderEvents(list){
+      var body = $('#eventsTbody'); if(!body) return;
+      body.innerHTML = '';
+      if(!list || list.length===0){
+        var tr0 = document.createElement('tr');
+        var td0 = document.createElement('td'); td0.colSpan=6; td0.style.color='var(--muted)'; td0.textContent='No events found';
+        tr0.appendChild(td0); body.appendChild(tr0); return;
+      }
+      function timeOf(obj, pref){
+        var h = obj[pref+'Hour']; var m = obj[pref+'Min'];
+        if(h!=null && m!=null){ return pad2(h)+':'+pad2(m); }
+        var t = obj[pref] || obj[pref+'Time'];
+        return t ? (''+t).slice(0,5) : '--:--';
+      }
+      for(var i=0;i<list.length;i++){
+        var ev = list[i];
+        var tr = document.createElement('tr');
+        var name = ev.eventName || ev.name || ev.event || ev.title || 'Event';
+        var device = ev.deviceName || ev.deviceId || ev.device || '—';
+        var days = Array.isArray(ev.days)? ev.days.join(' ') : (ev.daysString||ev.days||'—');
+        var time = timeOf(ev,'start')+'–'+timeOf(ev,'stop');
+        var onS  = (ev.onSec!=null)?ev.onSec : ((ev.workSec!=null)?ev.workSec : ((ev.cycle&&ev.cycle.on!=null)?ev.cycle.on:0));
+        var offS = (ev.offSec!=null)?ev.offSec: ((ev.pauseSec!=null)?ev.pauseSec: ((ev.cycle&&ev.cycle.off!=null)?ev.cycle.off:0));
+        var active = (typeof ev.active==='boolean')? ev.active : ((ev.status||'').toString().toLowerCase()==='active');
+        tr.innerHTML = '<td><strong>'+name+'</strong></td>'+
+                       '<td>'+device+'</td>'+
+                       '<td><span class="pill">'+days+'</span></td>'+
+                       '<td>'+time+'</td>'+
+                       '<td>'+onS+'s / '+offS+'s</td>'+
+                       '<td>'+(active? '<span class="status status--online">Active</span>':'<span class="status status--offline">Off</span>')+'</td>';
+        body.appendChild(tr);
+      }
+    }
+
+    function renderUsers(list){
+      var body = $('#usersTbody'); if(!body) return;
+      body.innerHTML = '';
+      if(!list || list.length===0){
+        var tr1 = document.createElement('tr');
+        var td1 = document.createElement('td'); td1.colSpan=4; td1.style.color='var(--muted)'; td1.textContent='No users found';
+        tr1.appendChild(td1); body.appendChild(tr1); return;
+      }
+      for(var i=0;i<list.length;i++){
+        var u = list[i];
+        var tr = document.createElement('tr');
+        var email = u.email || '—';
+        var role  = u.role  || '—';
+        var cnt   = (typeof u.devicesCount==='number')? u.devicesCount : '—';
+        tr.innerHTML = '<td><span class="pill">'+(u.id||'—')+'</span></td>'+
+                       '<td>'+email+'</td>'+
+                       '<td>'+role+'</td>'+
+                       '<td>'+cnt+'</td>';
+        body.appendChild(tr);
+      }
+    }
+
+    function showUsersError(msg){
+      var body = $('#usersTbody'); if(!body) return;
+      body.innerHTML = '';
+      var tr = document.createElement('tr'); var td = document.createElement('td');
+      td.colSpan = 4; td.style.color = 'var(--danger)'; td.textContent = msg;
+      tr.appendChild(td); body.appendChild(tr);
+    }
+
+    /***********************
+     * LOADERS             *
+     ***********************/
+    var SCHEMA = {
+      usersPath: 'users',
+      devicesCollection: 'devices',
+      eventsCollection: 'events',
+      deviceOwnerField: 'ownerUid',
+      eventOwnerField: 'ownerUid'
+    };
+
+    function loadDevicesAuto(user){
+      function tryFlat(){
+        return db.collection(SCHEMA.devicesCollection).where(SCHEMA.deviceOwnerField,'==',user.uid).get()
+          .then(function(s){ var arr=[]; s.forEach(function(d){ arr.push(Object.assign({id:d.id}, d.data())); }); return arr; });
+      }
+      function tryNested(){
+        return db.collection(SCHEMA.usersPath).doc(user.uid).collection('devices').get()
+          .then(function(s){ var arr=[]; s.forEach(function(d){ arr.push(Object.assign({id:d.id}, d.data())); }); return arr; });
+      }
+      function tryOwnersArray(){
+        return db.collection(SCHEMA.devicesCollection).where('owners','array-contains',user.uid).get()
+          .then(function(s){ var arr=[]; s.forEach(function(d){ arr.push(Object.assign({id:d.id}, d.data())); }); return arr; });
+      }
+      return tryFlat().catch(function(){return[];}).then(function(list){
+        if(list.length) return list; return tryNested().catch(function(){return[];});
+      }).then(function(list){
+        if(list.length) return list; return tryOwnersArray().catch(function(){return[];});
+      }).then(function(list){ renderDevices(list); return list; });
+    }
+
+    /* --------- ONLY CHANGE BELOW: extended events loader ---------- */
+    function loadEventsAuto(user, knownDevices){
+      function snapToList(snap){
+        var out=[]; snap.forEach(function(d){ out.push(Object.assign({id:d.id}, d.data())); });
+        return out;
+      }
+      function flat(){
+        return db.collection(SCHEMA.eventsCollection)
+                 .where(SCHEMA.eventOwnerField,'==',user.uid).get().then(snapToList);
+      }
+      function nested(){
+        return db.collection(SCHEMA.usersPath).doc(user.uid)
+                 .collection('events').get().then(snapToList);
+      }
+      // events under top-level devices/{deviceId}/events
+      function underTopLevelDevices(){
+        var all=[]; var seq = Promise.resolve();
+        (knownDevices||[]).forEach(function(dev){
+          var devId = dev.id || dev.deviceId; if(!devId) return;
+          seq = seq.then(function(){
+            return db.collection(SCHEMA.devicesCollection).doc(devId)
+                     .collection('events').get()
+              .then(function(s){ s.forEach(function(x){
+                all.push(Object.assign({id:x.id, deviceId:devId, deviceName:(dev.name||dev.deviceName||'')}, x.data()));
+              }); });
+          }).catch(function(){});
+        });
+        return seq.then(function(){ return all; });
+      }
+      // **NEW** events under users/{uid}/devices/{deviceId}/events
+      function underUserDevices(){
+        var all=[]; var seq = Promise.resolve();
+        (knownDevices||[]).forEach(function(dev){
+          var devId = dev.id || dev.deviceId; if(!devId) return;
+          seq = seq.then(function(){
+            return db.collection('users').doc(user.uid)
+                     .collection('devices').doc(devId)
+                     .collection('events').get()
+              .then(function(s){ s.forEach(function(x){
+                all.push(Object.assign({id:x.id, deviceId:devId, deviceName:(dev.name||dev.deviceName||'')}, x.data()));
+              }); });
+          }).catch(function(){});
+        });
+        return seq.then(function(){ return all; });
+      }
+
+      // Try sources in order; prefer user-owned collections
+      return flat().catch(function(){return[];}).then(function(list){
+        if(list.length){ renderEvents(list); return; }
+        return nested().catch(function(){return[];}).then(function(list2){
+          if(list2.length){ renderEvents(list2); return; }
+          return underUserDevices().then(function(list3){
+            if(list3.length){ renderEvents(list3); return; }
+            return underTopLevelDevices().then(function(list4){ renderEvents(list4); });
+          });
+        });
+      });
+    }
+    /* --------- ONLY CHANGE ABOVE ---------------------------------- */
+
+    function loadRegisteredUsers(){
+      return db.collection('users').get().then(function(s){
+        var list=[]; s.forEach(function(d){ list.push(Object.assign({id:d.id}, d.data())); });
+        var limited = list.slice(0,50);
+        var seq = Promise.resolve();
+        for(var i=0;i<limited.length;i++){
+          (function(idx, u){
+            seq = seq.then(function(){
+              return db.collection('users').doc(u.id).collection('devices').get()
+                .then(function(sub){ list[idx].devicesCount = sub.size; })
+                .catch(function(){});
+            });
+          })(i, limited[i]);
+        }
+        return seq.then(function(){
+          var qEl = $('#userSearch'); var q = qEl ? qEl.value.trim().toLowerCase() : '';
+          if(q){
+            var f=[]; for(var i=0;i<list.length;i++){
+              var em = (list[i].email||'').toLowerCase(); var rl = (list[i].role||'').toLowerCase();
+              if(em.indexOf(q)!==-1 || rl.indexOf(q)!==-1){ f.push(list[i]); }
+            }
+            list = f;
+          }
+          renderUsers(list);
+        });
+      }).catch(function(err){
+        console.error('Users load error:', err);
+        showUsersError('Cannot read users (auth/rules). Sign in with Email/Password.');
       });
     }
 
-    // Reads events from either users/{uid}/devices/{id}/events OR devices/{id}/events
-    async function fetchEventsForDevice(uid, deviceId) {
-      // Try user-owned events
-      try {
-        const q1 = query(collection(db, "users", uid, "devices", deviceId, "events"), limit(50));
-        const s1 = await getDocs(q1);
-        if (!s1.empty) return s1.docs.map(x => ({ id: x.id, ...x.data() }));
-      } catch (e) { /* ignore; path may not exist */ }
+    /***********************
+     * AUTH (NO ANONYMOUS) *
+     ***********************/
+    function setAuthedUI(user){
+      var signedIn = !!user;
+      var chip = $('#userEmailChip');
+      if (chip) chip.textContent = signedIn ? (user.email || 'Signed in') : 'Signed out';
 
-      // Fallback to top-level device events
-      try {
-        const q2 = query(collection(db, "devices", deviceId, "events"), limit(50));
-        const s2 = await getDocs(q2);
-        return s2.docs.map(x => ({ id: x.id, ...x.data() }));
-      } catch (e) {
-        console.error("Events read failed:", e);
-        return [];
-      }
+      var btnLogin = $('#openLoginBtn');
+      var btnLogout = $('#signOutBtn');
+      if (btnLogin)  btnLogin.style.display  = signedIn ? 'none' : 'inline-block';
+      if (btnLogout) btnLogout.style.display = signedIn ? 'inline-block' : 'none';
     }
 
-    async function renderForUser(user){
-      try {
-        const uRef = doc(db, "users", user.uid);
-        const uSnap = await getDoc(uRef);
-        if (!uSnap.exists()) { placeholder("No user profile found in Firestore."); return; }
+    function openModal(){ var m = $('#loginModal'); if(m){ m.style.display='flex'; m.setAttribute('aria-hidden','false'); } }
+    function closeModal(){ var m = $('#loginModal'); if(m){ m.style.display='none'; m.setAttribute('aria-hidden','true'); } }
 
-        grid.innerHTML = "";
-
-        // Schema A: user doc keeps 'devices' array -> points to top-level devices/{id}
-        const ids = Array.isArray(uSnap.data().devices) ? uSnap.data().devices : [];
-        if (ids.length) {
-          for (const id of ids) {
-            const dSnap = await getDoc(doc(db, "devices", id));
-            if (!dSnap.exists()) continue;
-            const events = await fetchEventsForDevice(user.uid, id);
-            const html = deviceCard(dSnap.id, dSnap.data(), eventListHtml(dSnap.id, events));
-            grid.insertAdjacentHTML("beforeend", html);
-            wireEventToggles(grid.lastElementChild.querySelector(".event-list"));
-          }
-          return;
-        }
-
-        // Schema B: devices under users/{uid}/devices
-        const sub = await getDocs(collection(db, "users", user.uid, "devices"));
-        if (sub.empty) {
-          placeholder("No devices assigned to your account.");
-        } else {
-          for (const d of sub.docs) {
-            const events = await fetchEventsForDevice(user.uid, d.id);
-            const html = deviceCard(d.id, d.data(), eventListHtml(d.id, events));
-            grid.insertAdjacentHTML("beforeend", html);
-            wireEventToggles(grid.lastElementChild.querySelector(".event-list"));
-          }
-        }
-      } catch (e) {
-        console.error(e);
-        showError("Couldn't load your devices: " + e.message);
-      }
+    function startApp(user){
+      setAuthedUI(user);
+      loadDevicesAuto(user)
+        .then(function(devs){ return loadEventsAuto(user, devs); })
+        .then(function(){ return loadAccount(user); })
+        .then(function(){ return loadRegisteredUsers(); })
+        .catch(function(e){ console.error(e); });
     }
 
-    // Auth flow (single listener to avoid duplicate calls)
-    onAuthStateChanged(auth, (user) => {
+    auth.onAuthStateChanged(function(user){
       if (!user) {
-        window.location.href = "login.html?role=user";
+        setAuthedUI(null);
+        renderUsers([]);
+        renderDevices([]);
+        renderEvents([]);
+        openModal();
         return;
       }
-      // Debug strip (safe even if appended twice)
-      const dbg = document.createElement("div");
-      dbg.style.cssText = "text-align:center; opacity:.65; margin:8px 0;";
-      dbg.innerHTML = `Debug: <code>${user.email}</code> / UID <code>${user.uid}</code>`;
-      document.querySelector("header").appendChild(dbg);
-
-      renderForUser(user);
+      startApp(user);
     });
 
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-      } finally {
-        window.location.href = "login.html";
+    /***********************
+     * UI: Buttons & Modal *
+     ***********************/
+    var openLoginBtn = $('#openLoginBtn');
+    var closeLoginBtn = $('#closeLoginBtn');
+    var doLoginBtn    = $('#doLoginBtn');
+    var signOutBtn    = $('#signOutBtn');
+
+    if (openLoginBtn) openLoginBtn.addEventListener('click', openModal);
+    if (closeLoginBtn) closeLoginBtn.addEventListener('click', closeModal);
+
+    if (doLoginBtn) doLoginBtn.addEventListener('click', function(){
+      var email = ($('#loginEmail') && $('#loginEmail').value) || '';
+      var pass  = ($('#loginPass') && $('#loginPass').value) || '';
+      var msgEl = $('#loginMsg'); if(msgEl) msgEl.textContent = '';
+      if(!email || !pass){
+        if(msgEl) msgEl.textContent = 'Enter email and password.';
+        return;
       }
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(function(){ closeModal(); })
+        .catch(function(err){
+          console.error(err);
+          if(msgEl) msgEl.textContent = err && err.message ? err.message : 'Sign-in failed.';
+        });
     });
+
+    if (signOutBtn) signOutBtn.addEventListener('click', function(){
+      auth.signOut();
+    });
+
+    // Account tile info
+    function loadAccount(user){
+      return db.collection('users').doc(user.uid).get().then(function(doc){
+        var data = doc.exists? doc.data() : {};
+        var name = data.name || user.displayName || '—';
+        var email = user.email || '—';
+        var uid = user.uid;
+        var el;
+        el = $('#accName');  if(el) el.textContent = name;
+        el = $('#accEmail'); if(el) el.textContent = email;
+        el = $('#accUid');   if(el) el.textContent = uid;
+        setAvatarFromName(name || email || 'U');
+      });
+    }
+
+    // Other buttons
+    var editBtn = $('#editProfileBtn'); if(editBtn) editBtn.addEventListener('click', function(){ alert('Edit profile clicked'); });
+    var addBtn = $('#addDeviceBtn'); if(addBtn) addBtn.addEventListener('click', function(){ alert('Add device clicked'); });
+    var refreshDev = $('#refreshDevicesBtn'); if(refreshDev) refreshDev.addEventListener('click', function(){ var u=auth.currentUser; if(u) loadDevicesAuto(u); });
+    var refreshEvt = $('#refreshEventsBtn'); if(refreshEvt) refreshEvt.addEventListener('click', function(){ var u=auth.currentUser; if(u) loadDevicesAuto(u).then(function(devs){ return loadEventsAuto(u,devs); }); });
+    var refreshUsers = $('#refreshUsersBtn'); if(refreshUsers) refreshUsers.addEventListener('click', function(){ loadRegisteredUsers(); });
+    var userSearch = $('#userSearch'); if(userSearch) userSearch.addEventListener('input', function(){ loadRegisteredUsers(); });
   </script>
 </body>
 </html>
